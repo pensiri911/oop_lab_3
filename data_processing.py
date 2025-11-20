@@ -31,8 +31,26 @@ class DB:
 class Table:
     """Your code here"""
 
-    def __str__(self):
-        return self.table_name + ':' + str(self.table)
+    def __init__(self, table_name, table):
+        self.table_name = table_name
+        self.table = table  # list of dictionaries
+
+    def filter(self, func):
+        filtered = list(filter(func, self.table))
+        return Table(self.table_name + "_filtered", filtered)
+
+    def aggregate(self, func, column):
+        values = [float(row[column]) for row in self.table]
+        return func(values)
+
+    def join(self, other_table, key):
+        joined_table = []
+        for row1 in self.table:
+            for row2 in other_table.table:
+                if row1[key] == row2[key]:
+                    combined = {**row1, **row2}
+                    joined_table.append(combined)
+        return Table(f"{self.table_name}_joined_{other_table.table_name}", joined_table)
 
 loader = DataLoader()
 cities = loader.load_csv('Cities.csv')
