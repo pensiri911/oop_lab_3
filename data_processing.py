@@ -27,30 +27,51 @@ class DataLoader:
 
 class DB:
     """Your code here"""
-    
+    def __init__(self):
+        self.tables = {}
+
+    def insert(self, table):
+        self.tables[table.table_name] = table.table
+
+    def search(self, key_word):
+        search_table = self.tables.get(key_word)
+        return Table('IDK', search_table)
+        
 class Table:
     """Your code here"""
-
-    def __init__(self, table_name, table):
-        self.table_name = table_name
-        self.table = table  # list of dictionaries
-
-    def filter(self, func):
-        filtered = list(filter(func, self.table))
-        return Table(self.table_name + "_filtered", filtered)
-
-    def aggregate(self, func, column):
-        values = [float(row[column]) for row in self.table]
-        return func(values)
+    def __init__(self, name, table):
+        self.table = table
+        self.table_name = name
+        
+    def filter(self, condition):
+        dict_list = self.table
+        dict_return = []
+        for item in dict_list:
+            if condition(item):
+                dict_return.append(item)
+        return Table("name",dict_return)
+            
+    def aggregate(self, aggregation_function, aggregation_key):
+        temps = []
+        dict_list = self.table
+        for item in dict_list:
+            try:
+                temps.append(float(item[aggregation_key]))
+            except ValueError:
+                temps.append(item[aggregation_key])
+        return aggregation_function(temps)
 
     def join(self, other_table, key):
-        joined_table = []
-        for row1 in self.table:
-            for row2 in other_table.table:
-                if row1[key] == row2[key]:
-                    combined = {**row1, **row2}
-                    joined_table.append(combined)
-        return Table(f"{self.table_name}_joined_{other_table.table_name}", joined_table)
+        joined_list = []
+        other_dict = {row[key]: row for row in other_table.table}
+        for row in self.table:
+            if row[key] in other_dict:
+                combined = {**row, **other_dict[row[key]]}
+                joined_list.append(combined)
+        return Table(f"{self.table_name}_joined_{other_table.table_name}", joined_list)
+
+    def __str__(self):
+        return self.table_name + ':' + str(self.table)
 
 loader = DataLoader()
 cities = loader.load_csv('Cities.csv')
